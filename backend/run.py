@@ -1,12 +1,6 @@
-from flask import Flask
-from flask_cors import CORS
+from app import create_app, db
 
-app = Flask(__name__)
-CORS(app)
-
-@app.route("/health")
-def health():
-    return {"status": "ok"}
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug = True)
+    app.run(debug=True)
