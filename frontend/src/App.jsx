@@ -7,6 +7,7 @@ function App(){
  const [error, setError] = useState("");
  const [name, setName] = useState("");
  const [email, setEmail] = useState("");
+ const [password, setPassword] = useState("");
 
  const handleSubmit = (e)=> {
   e.preventDefault();
@@ -17,7 +18,8 @@ function App(){
   },
   body: JSON.stringify({
     name: name,
-    email: email
+    email: email,
+    password: password
   })
 })
   .then((response) => {
@@ -36,6 +38,7 @@ function App(){
 
     setName("");
     setEmail("");
+    setPassword("");
   })
   .catch((error) => {
     setError(error.message);
@@ -77,6 +80,13 @@ function App(){
       value={email}
       onChange={(e) => setEmail(e.target.value)}
       placeholder="Email"
+      />
+      <input 
+      type = "password"
+      value = {password}
+      onChange = {(e) => setPassword(e.target.value)}
+      placeholder = "Enter Your Password"
+      
       />
       <button type = "submit">Create User</button>
     </form>

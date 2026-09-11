@@ -3,6 +3,8 @@ from sqlalchemy.exc import IntegrityError
 from flask import Blueprint, jsonify, request
 from app.models.user import User
 from app.extensions import db
+from werkzeug.security import generate_password_hash
+
 
 users_bp = Blueprint("users", __name__)
 
@@ -27,19 +29,22 @@ def create_user():
 
     data = request.get_json()
 
-    if "name" not in data or "email" not in data:
+    if "name" not in data or "email" not in data or "password" not in data:
         return jsonify({
-            "error": "Missing required fields: name and email"
+            "error": "Missing required fields: name, email, and password"
         }), 400
 
-    if not data["name"] or not data["email"]:
+    if not data["name"] or not data["email"] or not data["password"]:
         return jsonify({
-            "error": "Name and email cannot be empty"
+            "error": "Name, email, and password cannot be empty"
         }), 400
+
+    password_hash = generate_password_hash(data["password"])
 
     user = User(
         name = data["name"],
-        email = data["email"]
+        email = data["email"],
+        password_hash = password_hash
     )
 
     try:
