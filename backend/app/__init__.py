@@ -18,6 +18,9 @@ def create_app():
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # Set refresh token expiration time
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+  
+     # Ensure the uploads directory exists  
+    app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024  # Set max upload size to 100MB
 
     CORS(app, resources={r"/api/*": {
         "origins": [
@@ -33,9 +36,12 @@ def create_app():
     jwt = JWTManager(app)
     from app.routes.users import users_bp
     from app.routes.auth import auth_bp
+    from app.routes.media import media_bp
     app.register_blueprint(users_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(media_bp)
 
     from app.models.user import User
+    from app.models.video import Video
 
     return app
