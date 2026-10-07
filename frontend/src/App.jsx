@@ -1,104 +1,113 @@
-import {useEffect, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 
+function App() {
+    const workerRef = useRef(null);
 
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [hash, setHash] = useState("");
 
-function App(){
- const [users, setUsers] = useState([]);
- const [error, setError] = useState("");
- const [name, setName] = useState("");
- const [email, setEmail] = useState("");
- const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
- const handleSubmit = (e)=> {
-  e.preventDefault();
-  fetch("/api/users", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    name: name,
-    email: email,
-    password: password
-  })
-})
-  .then((response) => {
-    return response.json().then((data) => {
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
+    useEffect(() => {
+        const worker = new Worker(
+            new URL("./workers/fileWorker.js", import.meta.url),
+            {
+                type: "module"
+            }
+        );
 
-      return data;
-    });
-  })
-  .then((data) => {
-    setError("");
+        workerRef.current = worker;
 
-    setUsers((currentUsers) => [...currentUsers, data]);
+        worker.onmessage = (event) => {
+            const data = event.data;
 
-    setName("");
-    setEmail("");
-    setPassword("");
-  })
-  .catch((error) => {
-    setError(error.message);
-  });
+            if (data.type === "success") {
+                setHash(data.hash);
+                setError("");
+            }
 
- };
+            if (data.type === "error") {
+                setError(data.message);
+                setHash("");
+            }
+        };
 
- useEffect(() => {
-  fetch("/api/users")
-  .then((response) => {
-    if (!response.ok) {
-      throw new Error(`Users request failed (${response.status})`);
-    }
-    return response.json();
-  })
-  .then((data) => {
-    setUsers(data);
-  })
-  .catch((requestError) => {
-    setError(requestError.message);
-  })
- }, [])
+        return () => {
+            worker.terminate();
+        };
+    }, []);
 
- return(
-  <div>
-    <h1>Users</h1>
-    <p>This is a list of all users in the system.</p>
-    {error && <p>{error}</p>}
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
 
-    <form onSubmit={handleSubmit}>
-      <input
-      type="text"
-      value={name}
-      onChange={(e) => setName(e.target.value)}
-      placeholder="Name"
-      />
-      <input
-      type="email"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      placeholder="Email"
-      />
-      <input 
-      type = "password"
-      value = {password}
-      onChange = {(e) => setPassword(e.target.value)}
-      placeholder = "Enter Your Password"
-      
-      />
-      <button type = "submit">Create User</button>
-    </form>
+        if (!file) {
+            return;
+        }
 
-    {users.map((user)=> {
-      return(<div key = {user.id}>
-        <h2>{user.name}</h2>
-        <p>{user.email}</p>
-      </div>)
-    })}
-  </div>
- ) 
+        setSelectedFile(file);
+        setHash("");
+        setError("");
+
+        const allowedExtensions = ["mp4", "mov", "avi", "mkv"];
+
+        const extension = file.name.split(".").pop().toLowerCase();
+
+        if(!allowedExtensions.includes(extension)) {
+          setError("Invalid file type. Please select a video file (mp4, mov, avi, mkv).");
+          return;
+        }
+
+        const maxFileSize = 500 * 1024 * 1024; // 500 MB
+
+        if(file.size > maxFileSize){
+          setError("File size exceeds the maximum limit of 500 MB.");
+          return;
+        }
+
+        setSelectedFile(file);
+
+        
+
+        const buffer = await file.arrayBuffer();
+
+        workerRef.current.postMessage(buffer);
+    };
+
+    return (
+        <div>
+            <h1>File Hash Test</h1>
+
+            <input
+                type="file"
+                onChange={handleFileChange}
+            />
+
+            {selectedFile && (
+                <div>
+                    <p>
+                        File: {selectedFile.name}
+                    </p>
+
+                    <p>
+                        Size: {selectedFile.size} bytes
+                    </p>
+                </div>
+            )}
+
+            {hash && (
+                <div>
+                    <p>SHA-256:</p>
+                    <p>{hash}</p>
+                </div>
+            )}
+
+            {error && (
+                <p>
+                    Error: {error}
+                </p>
+            )}
+        </div>
+    );
 }
 
 export default App;
