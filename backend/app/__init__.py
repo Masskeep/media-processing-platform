@@ -6,6 +6,7 @@ from flask_cors import CORS
 from app.extensions import db, migrate
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
+from app.models.uploadsession import UploadSession
 def create_app():
     load_dotenv()
 
