@@ -17,11 +17,16 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)  # Set token expiration time
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)  # Set refresh token expiration time
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+   
   
      # Ensure the uploads directory exists  
     app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024  # Set max upload size to 100MB
+
+    app.config["AWS_REGION"] = os.getenv("AWS_REGION",
+                                         "ap-south-1")
+
+    app.config["S3_BUCKET_NAME"] = os.getenv("S3_BUCKET_NAME"
+                                             )
 
     CORS(app, resources={r"/api/*": {
         "origins": [

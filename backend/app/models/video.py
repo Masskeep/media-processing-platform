@@ -27,6 +27,11 @@ class Video(db.Model):
         db.BigInteger,
         nullable=False
     )
+    s3_object_key = db.Column(
+        db.String(1024),
+        nullable=True,
+        unique=True
+    )
     status = db.Column(
         db.String(50),
         nullable=False,
